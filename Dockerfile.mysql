@@ -6,3 +6,5 @@ ENV MYSQL_DATABASE=app_db \
     MYSQL_ROOT_PASSWORD=root1234
 
 EXPOSE 3306
+
+VOLUME ["/var/lib/mysql"]

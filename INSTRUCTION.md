@@ -1,6 +1,28 @@
 # INSTRUCTION
 
-## 1. Run MySQL container with a volume attached
+> Replace `dtsy` with your own Docker Hub username if needed.
+
+---
+
+## 1. Build MySQL image from Dockerfile.mysql
+
+```bash
+docker build -f Dockerfile.mysql -t mysql-local:1.0.0 .
+```
+
+---
+
+## 2. Push MySQL image to Docker Hub (mysql-local repository)
+
+```bash
+docker login
+docker tag mysql-local:1.0.0 dtsy/mysql-local:1.0.0
+docker push dtsy/mysql-local:1.0.0
+```
+
+---
+
+## 3. Run MySQL container with a volume attached
 
 Create volume:
 
@@ -20,13 +42,13 @@ docker run -d \
 
 ---
 
-## 2. Get MySQL container IP address
+## 4. Get MySQL container IP address
 
 ```bash
-docker inspect mysql-db | grep IPAddress
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql-db
 ```
 
-Copy the IP address and update `todolist/settings.py`:
+Copy the printed IP address and update `todolist/settings.py`:
 
 ```python
 DATABASES = {
@@ -41,11 +63,11 @@ DATABASES = {
 }
 ```
 
-Replace `MYSQL_CONTAINER_IP` with the actual IP.
+> After changing `todolist/settings.py`, you must rebuild the Django image so the container includes the updated configuration.
 
 ---
 
-## 3. Build the Django application image
+## 5. Build Django application image (todoapp:2.0.0)
 
 ```bash
 docker build -t todoapp:2.0.0 .
@@ -53,7 +75,16 @@ docker build -t todoapp:2.0.0 .
 
 ---
 
-## 4. Run the application container
+## 6. Push Django application image to Docker Hub
+
+```bash
+docker tag todoapp:2.0.0 dtsy/todoapp:2.0.0
+docker push dtsy/todoapp:2.0.0
+```
+
+---
+
+## 7. Run the application container
 
 ```bash
 docker run -d \
@@ -64,22 +95,20 @@ docker run -d \
 
 ---
 
-## 5. Docker Hub repository
+## 8. Docker Hub repositories
 
-MySQL image:  
+MySQL image:
 https://hub.docker.com/r/dtsy/mysql-local
 
-Application image:  
+Application image:
 https://hub.docker.com/r/dtsy/todoapp
 
 ---
 
-## 6. Access the application in browser
+## 9. Access the application in browser
 
 Open:
-
 http://localhost:8080/
 
 API endpoint:
-
 http://localhost:8080/api/
