@@ -1,7 +1,5 @@
 # INSTRUCTION
 
-Replace `<YOUR_DOCKERHUB_USERNAME>` with your actual Docker Hub username.
-
 ---
 
 ## 0. Prerequisite
@@ -14,7 +12,7 @@ mysql-connector-python==8.2.0
 
 ---
 
-## 1. Build MySQL image (local name)
+## 1. Build MySQL image (local)
 
 ```bash
 docker build -f Dockerfile.mysql -t mysql-local:1.0.0 .
@@ -26,15 +24,15 @@ docker build -f Dockerfile.mysql -t mysql-local:1.0.0 .
 
 ```bash
 docker login
-docker tag mysql-local:1.0.0 <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
-docker push <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+docker tag mysql-local:1.0.0 dtsy/mysql-local:1.0.0
+docker push dtsy/mysql-local:1.0.0
 ```
 
 Local image name:
 mysql-local:1.0.0
 
 Pushed image name:
-<YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+dtsy/mysql-local:1.0.0
 
 ---
 
@@ -52,22 +50,20 @@ docker network create todo-network
 docker volume create mysql_data
 ```
 
-Run container:
-
 ```bash
 docker run -d \
   --name mysql-db \
   --network todo-network \
   -v mysql_data:/var/lib/mysql \
   -p 3306:3306 \
-  <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+  dtsy/mysql-local:1.0.0
 ```
 
 ---
 
-## 5. Update Django settings to use environment variable
+## 5. Update Django settings
 
-In `todolist/settings.py`, replace HOST with:
+In `todolist/settings.py`:
 
 ```python
 import os
@@ -86,7 +82,7 @@ DATABASES = {
 
 ---
 
-## 6. Build Django application image (local name)
+## 6. Build Django application image (local)
 
 ```bash
 docker build -t todoapp:2.0.0 .
@@ -97,15 +93,15 @@ docker build -t todoapp:2.0.0 .
 ## 7. Tag and push Django image
 
 ```bash
-docker tag todoapp:2.0.0 <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
-docker push <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
+docker tag todoapp:2.0.0 dtsy/todoapp:2.0.0
+docker push dtsy/todoapp:2.0.0
 ```
 
 Local image name:
 todoapp:2.0.0
 
 Pushed image name:
-<YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
+dtsy/todoapp:2.0.0
 
 ---
 
@@ -117,7 +113,7 @@ docker run -d \
   --network todo-network \
   -e DJANGO_DB_HOST=mysql-db \
   -p 8080:8000 \
-  <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
+  dtsy/todoapp:2.0.0
 ```
 
 ---
@@ -125,10 +121,10 @@ docker run -d \
 ## 9. Docker Hub repositories
 
 MySQL image:
-https://hub.docker.com/r/<YOUR_DOCKERHUB_USERNAME>/mysql-local
+https://hub.docker.com/r/dtsy/mysql-local
 
 Application image:
-https://hub.docker.com/r/<YOUR_DOCKERHUB_USERNAME>/todoapp
+https://hub.docker.com/r/dtsy/todoapp
 
 ---
 
