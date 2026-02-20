@@ -1,10 +1,20 @@
 # INSTRUCTION
 
-> Replace `dtsy` with your own Docker Hub username if needed.
+Replace `<YOUR_DOCKERHUB_USERNAME>` with your actual Docker Hub username.
 
 ---
 
-## 1. Build MySQL image from Dockerfile.mysql
+## 0. Prerequisite
+
+Ensure `requirements.txt` contains:
+
+```
+mysql-connector-python==8.2.0
+```
+
+---
+
+## 1. Build MySQL image (local name)
 
 ```bash
 docker build -f Dockerfile.mysql -t mysql-local:1.0.0 .
@@ -12,62 +22,71 @@ docker build -f Dockerfile.mysql -t mysql-local:1.0.0 .
 
 ---
 
-## 2. Push MySQL image to Docker Hub (mysql-local repository)
+## 2. Tag and push MySQL image to Docker Hub
 
 ```bash
 docker login
-docker tag mysql-local:1.0.0 dtsy/mysql-local:1.0.0
-docker push dtsy/mysql-local:1.0.0
+docker tag mysql-local:1.0.0 <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+docker push <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+```
+
+Local image name:
+mysql-local:1.0.0
+
+Pushed image name:
+<YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
+
+---
+
+## 3. Create Docker network
+
+```bash
+docker network create todo-network
 ```
 
 ---
 
-## 3. Run MySQL container with a volume attached
-
-Create volume:
+## 4. Run MySQL container with volume attached
 
 ```bash
 docker volume create mysql_data
 ```
 
-Run MySQL container:
+Run container:
 
 ```bash
 docker run -d \
   --name mysql-db \
+  --network todo-network \
   -v mysql_data:/var/lib/mysql \
   -p 3306:3306 \
-  dtsy/mysql-local:1.0.0
+  <YOUR_DOCKERHUB_USERNAME>/mysql-local:1.0.0
 ```
 
 ---
 
-## 4. Get MySQL container IP address
+## 5. Update Django settings to use environment variable
 
-```bash
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mysql-db
-```
-
-Copy the printed IP address and update `todolist/settings.py`:
+In `todolist/settings.py`, replace HOST with:
 
 ```python
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
         'NAME': 'app_db',
         'USER': 'app_user',
         'PASSWORD': '1234',
-        'HOST': 'MYSQL_CONTAINER_IP',
+        'HOST': os.getenv('DJANGO_DB_HOST', 'localhost'),
         'PORT': '',
     }
 }
 ```
 
-> After changing `todolist/settings.py`, you must rebuild the Django image so the container includes the updated configuration.
-
 ---
 
-## 5. Build Django application image (todoapp:2.0.0)
+## 6. Build Django application image (local name)
 
 ```bash
 docker build -t todoapp:2.0.0 .
@@ -75,40 +94,47 @@ docker build -t todoapp:2.0.0 .
 
 ---
 
-## 6. Push Django application image to Docker Hub
+## 7. Tag and push Django image
 
 ```bash
-docker tag todoapp:2.0.0 dtsy/todoapp:2.0.0
-docker push dtsy/todoapp:2.0.0
+docker tag todoapp:2.0.0 <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
+docker push <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
 ```
+
+Local image name:
+todoapp:2.0.0
+
+Pushed image name:
+<YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
 
 ---
 
-## 7. Run the application container
+## 8. Run Django application container
 
 ```bash
 docker run -d \
   --name todo-app \
-  -p 8080:8080 \
-  dtsy/todoapp:2.0.0
+  --network todo-network \
+  -e DJANGO_DB_HOST=mysql-db \
+  -p 8080:8000 \
+  <YOUR_DOCKERHUB_USERNAME>/todoapp:2.0.0
 ```
 
 ---
 
-## 8. Docker Hub repositories
+## 9. Docker Hub repositories
 
 MySQL image:
-https://hub.docker.com/r/dtsy/mysql-local
+https://hub.docker.com/r/<YOUR_DOCKERHUB_USERNAME>/mysql-local
 
 Application image:
-https://hub.docker.com/r/dtsy/todoapp
+https://hub.docker.com/r/<YOUR_DOCKERHUB_USERNAME>/todoapp
 
 ---
 
-## 9. Access the application in browser
+## 10. Access the application
 
-Open:
 http://localhost:8080/
 
-API endpoint:
+API:
 http://localhost:8080/api/
